@@ -44,7 +44,7 @@ def home(request):
                 result = data["task"].task.delay(*data["args"])
                 return redirect("status", task_name=fullname, task_id=result.id)
     else:
-        task_form = forms.TaskForm(initial={"args": "[]"})
+        task_form = forms.TaskForm(initial={"args": '["http://example.org/"]'})
 
     return render(request, "helloworld/home.html", {"task_form": task_form})
 
