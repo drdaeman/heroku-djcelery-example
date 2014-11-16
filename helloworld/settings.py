@@ -99,7 +99,7 @@ STATICFILES_DIRS = (
 import djcelery
 djcelery.setup_loader()
 
-BROKER_URL = os.environ.get("CLOUDAMQP_URL", "django://")
+BROKER_URL = os.environ.get("REDISCLOUD_URL", "django://")
 BROKER_POOL_LIMIT = 1
 BROKER_CONNECTION_MAX_RETRIES = None
 
