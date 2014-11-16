@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Hello, world{% endblock %}
+
+{% block additional_head %}
+    <style type="text/css">
+        .helptext {
+            display: block;
+            font-size: 80%;
+            color: #666;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1>Hello, world.</h1>
+
+    <form action="{% url "home" %}" method="POST">
+        {% csrf_token %}
+        {{ task_form.as_p }}
+        <p><input type="submit" value="Enqueue" /></p>
+    </form>
+{% endblock %}

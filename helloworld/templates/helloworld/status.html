@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Task status{% endblock %}
+
+{% block content %}
+    <h1>Task {{ task.name }}/{{ task_id }} status</h1>
+
+    <p>Status: {{ async_result.status }}</p>
+    <p>Ready: {{ async_result.ready }}</p>
+    {% if result %}
+        <p>Result:</p>
+        <pre style="overflow-x: scroll;">{{ result }}</pre>
+    {% endif %}
+{% endblock %}
