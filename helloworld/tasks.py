@@ -15,6 +15,14 @@ def fetch_url(url, **kwargs):
     return (r.status_code, r.content)
 
 
+@task()
+def echo(data):
+   """
+   A simplest task that just returns back the data it got.
+   """
+   return data
+
+
 #
 # Introspect the current module and find all the declared tasks.
 #
