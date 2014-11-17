@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import Truncator
-from djcelery.models import CrontabSchedule
+from djcelery.models import CrontabSchedule, IntervalSchedule, PERIOD_CHOICES
 import celery
 import json
 
@@ -32,8 +32,9 @@ class ScheduleField(forms.CharField):
     """
     def __init__(self, *args, **kwargs):
         if not "help_text" in kwargs:
-            kwargs["help_text"] = _(u"Crontab-like schedule string containing"
-                                    u" at least minutes and hours, e.g. \"*/15 *\"")
+            kwargs["help_text"] = _(u"Schedule string containing"
+                                    u" either crontab-style string at least minutes and hours,"
+                                    u" e.g. \"*/15 *\" or interval like \"1 minutes\"")
         return super(ScheduleField, self).__init__(*args, **kwargs)
 
     def clean(self, value):
@@ -45,9 +46,31 @@ class ScheduleField(forms.CharField):
             raise forms.ValidationError(_(u"Bad schedule string, must contain between"
                                           u" 2 and 5 space-separated fields."))
 
-        schedule = dict(zip(["minute", "hour", "day_of_week", "day_of_month", "month_of_year"],
-                            schedule + ["*", "*", "*"]))
-        schedule, _unused = CrontabSchedule.objects.get_or_create(**schedule)
+        # See whenever we have interval or crontab-style string
+        interval_names = {choice[0].lower().rstrip("s"): choice[0] for choice in PERIOD_CHOICES}
+        period = schedule[1].lower().rstrip("s")
+        if period in interval_names:
+            # We have interval string
+            period = interval_names[period]
+            try:
+                every = int(schedule[0])
+                if every < 1:
+                    raise forms.ValidationError(_("First value must greater than zero"))
+            except ValueError:
+                raise forms.ValidationError(_("For an interval, first value must be an integer"))
+
+            # Get or create matching IntervalSchedule object
+            schedule, _unused = IntervalSchedule.objects.get_or_create(every=every, period=period)
+        else:
+            # We have a crontab-style string
+
+            # TODO: This code lacks validation, but I think this is outside of scope
+            # of the simple sample project.
+            schedule = dict(zip(["minute", "hour", "day_of_week", "day_of_month", "month_of_year"],
+                                schedule + ["*", "*", "*"]))
+
+            # Get or create matching CrontabSchedule object
+            schedule, _unused = CrontabSchedule.objects.get_or_create(**schedule)
         return schedule
 
 

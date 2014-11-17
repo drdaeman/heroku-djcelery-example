@@ -27,12 +27,20 @@ def home(request):
             name = data["task"].name
 
             if data["schedule"] is not None:
+                # Not the prettiest way, but necessary since different schedule
+                # types must be provided as a differently named kwargs.
+                if isinstance(data["schedule"], CrontabSchedule):
+                    crontab, interval = data["schedule"], None
+                else:
+                    crontab, interval = None, data["schedule"]
+
                 # This is a task to be scheduled periodically
                 ptask_name = "generated_{0}_{1}".format(name, str(uuid.uuid4()))
                 ptask = PeriodicTask(
                     name=ptask_name,
                     task=fullname,
-                    crontab=data["schedule"], args=json.dumps(data["args"])
+                    args=json.dumps(data["args"]),
+                    crontab=crontab, interval=interval
                 )
                 ptask.save()
                 return render(request, "helloworld/message.html", {
