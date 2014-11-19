@@ -128,14 +128,27 @@ Then, do the same `settings.py` editing as with CloudAMQP setup (see the above s
 with the sole exception of using another environment variable name for `BROKER_URL`:
 
     BROKER_URL = os.environ.get("REDISCLOUD_URL", "django://")
+
+Unfortunately, Celery seems to be quite hungly for connections. If the Celery gets over
+the limit, you may also consider trying setting those with
+
     BROKER_TRANSPORT_OPTIONS = {
-        "max_connections": 5,
+        "max_connections": 2,
     }
 
-The `max_connections` option limits the actual number of Redis connection. The issue is,
+Here, the `max_connections` option limits the actual number of Redis connections. The issue is,
 `BROKER_POOL_LIMIT` controls the number of underlying library (called Kombu)'s connection
 objects in the pool, but Redis transport can use [several actual redis connections][15] to
 emulate AMQP channels.
+
+Another option that seems to work better for me in such resource-constrained environment is
+not using pool at all by setting
+
+    BROKER_POOL_LIMIT = None
+
+This way connections will be open only when necessary. Not really good performance-wise,
+since a new connection has to be established every time it's needed, but this approach
+[can be helpful][16] in some cases.
 
 That's the all differences between broker setup. Since we're using database backend to store
 results and brokers do not need to persist any information you can switch back and forth
@@ -427,3 +440,4 @@ That's it. Hope this guide helped!
 [13]: https://github.com/celery/django-celery#readme
 [14]: https://github.com/celery/django-celery/blob/554984b0f637d4e65b087abced0371a0bc369cc7/djcelery/models.py#L86
 [15]: https://github.com/celery/celery/issues/1350#issuecomment-17881787
+[16]: http://stackoverflow.com/a/23563018/116546
