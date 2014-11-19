@@ -128,6 +128,14 @@ Then, do the same `settings.py` editing as with CloudAMQP setup (see the above s
 with the sole exception of using another environment variable name for `BROKER_URL`:
 
     BROKER_URL = os.environ.get("REDISCLOUD_URL", "django://")
+    BROKER_TRANSPORT_OPTIONS = {
+        "max_connections": 5,
+    }
+
+The `max_connections` option limits the actual number of Redis connection. The issue is,
+`BROKER_POOL_LIMIT` controls the number of underlying library (called Kombu)'s connection
+objects in the pool, but Redis transport can use [several actual redis connections][15] to
+emulate AMQP channels.
 
 That's the all differences between broker setup. Since we're using database backend to store
 results and brokers do not need to persist any information you can switch back and forth
@@ -418,3 +426,4 @@ That's it. Hope this guide helped!
 [11]: https://devcenter.heroku.com/articles/getting-started-with-django
 [13]: https://github.com/celery/django-celery#readme
 [14]: https://github.com/celery/django-celery/blob/554984b0f637d4e65b087abced0371a0bc369cc7/djcelery/models.py#L86
+[15]: https://github.com/celery/celery/issues/1350#issuecomment-17881787
